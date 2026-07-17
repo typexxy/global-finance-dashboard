@@ -477,7 +477,32 @@ let searchTimer = null;
 let refreshTimer = null;
 let currentStock = null;
 
-// JSONP helper
+// ========== API Proxy Config ==========
+// 部署到 HTTPS 站点（如 GitHub Pages）时，需要 Cloudflare Worker 代理来访问东方财富 HTTP API
+// 1. 将 worker.js 部署到 Cloudflare Workers
+// 2. 将得到的 URL 填入下方（末尾不要加斜杠）
+//    例如：API_PROXY = 'https://east-proxy.你的用户名.workers.dev'
+// 3. 如果只是本地双击 HTML 使用（file:// 协议），保持为空即可
+const API_PROXY = '';
+// Note: HTTP URLs work on file:// protocol and via Cloudflare Worker proxy.
+//       Direct HTTPS would fail on push2.eastmoney.com (server rejects TLS).
+const API_HTTP = 'http';
+
+// Fetch with optional proxy
+async function fetchWithProxy(apiUrl) {
+  if (API_PROXY) {
+    // Proxy mode: HTTP API → Worker proxy → HTTPS → page
+    const proxyUrl = API_PROXY + '?url=' + encodeURIComponent(apiUrl);
+    const resp = await fetch(proxyUrl);
+    if (!resp.ok) throw new Error('代理错误: ' + resp.status);
+    return await resp.json();
+  } else {
+    // Direct JSONP mode (local file:// usage, no mixed-content restriction)
+    return jsonp(apiUrl);
+  }
+}
+
+// JSONP helper (for local file:// usage)
 function jsonp(url, timeout) {
   timeout = timeout || 10000;
   return new Promise((resolve, reject) => {
@@ -509,8 +534,8 @@ async function searchStocks(keyword) {
   results.classList.add('show');
 
   try {
-    const url = 'https://searchapi.eastmoney.com/api/suggest/get?input=' + encodeURIComponent(keyword) + '&type=14&token=D43BF722C8E33BDC906FB84D85E326E8&count=15';
-    const data = await jsonp(url);
+    const url = API_BASE + '://searchapi.eastmoney.com/api/suggest/get?input=' + encodeURIComponent(keyword) + '&type=14&token=D43BF722C8E33BDC906FB84D85E326E8&count=15';
+    const data = await fetchWithProxy(url);
     let items = [];
     if (data && data.Data) items = data.Data;
     else if (data && data.QuotationCodeTable && data.QuotationCodeTable.Data) items = data.QuotationCodeTable.Data;
@@ -599,10 +624,10 @@ async function fetchStockQuoteRaw(code, mkt, name) {
   const content = document.getElementById('stockDetailContent');
   const secid = mkt + '.' + code;
   const fields = 'f43,f44,f45,f46,f47,f48,f50,f51,f52,f55,f57,f58,f60,f84,f85,f100,f116,f117,f161,f162,f163,f167,f168,f169,f170,f171,f177';
-  const url = 'https://push2.eastmoney.com/api/qt/stock/get?secid=' + secid + '&fields=' + fields;
+  const url = API_HTTP + '://push2.eastmoney.com/api/qt/stock/get?secid=' + secid + '&fields=' + fields;
 
   try {
-    const data = await jsonp(url);
+    const data = await fetchWithProxy(url);
     if (!data || !data.data || data.rc !== 0) {
       content.innerHTML = '<div class="error-msg">无法获取该股票行情数据<br>可能是非交易时间或代码有误</div>';
       return;
@@ -948,22 +973,17 @@ let currentIndexFilter = 'all';
 let indexRefreshInt = null;
 
 // Batch fetch all index quotes via ulist API (single request)
-function fetchAllIndexQuotes() {
-  return new Promise((resolve) => {
-    const allSecids = INDEX_LIST.map(i => i.secid).join(',');
-    const cbName = '_idx_batch_' + Math.random().toString(36).slice(2);
-    window[cbName] = function(data) {
-      delete window[cbName];
-      if (data && data.data && data.data.diff) resolve(data.data.diff);
-      else resolve([]);
-    };
-    const s = document.createElement('script');
-    s.src = 'https://push2.eastmoney.com/api/qt/ulist.np/get?fields=f1,f2,f3,f4,f5,f6,f12,f14,f15,f16,f17,f18&secids=' + allSecids + '&cb=' + cbName;
-    s.onerror = () => { delete window[cbName]; resolve([]); };
-    document.body.appendChild(s);
-    s.remove();
-    setTimeout(() => { if(window[cbName]){ delete window[cbName]; resolve([]); } }, 10000);
-  });
+async function fetchAllIndexQuotes() {
+  const allSecids = INDEX_LIST.map(i => i.secid).join(',');
+  const url = API_HTTP + '://push2.eastmoney.com/api/qt/ulist.np/get?fields=f1,f2,f3,f4,f5,f6,f12,f14,f15,f16,f17,f18&secids=' + allSecids;
+
+  try {
+    const data = await fetchWithProxy(url);
+    if (data && data.data && data.data.diff) return data.data.diff;
+    return [];
+  } catch(e) {
+    return [];
+  }
 }
 
 function parseIndexData(item) {
