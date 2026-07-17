@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>全球金融看板 - 新闻与行情</title>
+<style>
+/* ========== Reset & Base ========== */
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',Roboto,sans-serif;background:#0a0e17;color:#d1d4dc;font-size:14px;line-height:1.6;overflow-x:hidden}
+a{color:#2962ff;text-decoration:none}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:#131722}
+::-webkit-scrollbar-thumb{background:#2a2e39;border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:#3a3e49}
+
+/* ========== Header ========== */
+.header{position:fixed;top:0;left:0;right:0;height:56px;background:#0d1117;border-bottom:1px solid #1e2530;z-index:100;display:flex;align-items:center;padding:0 24px;justify-content:space-between}
+.header-logo{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:700;color:#fff}
+.header-logo .dot{width:10px;height:10px;border-radius:50%;background:#26a69a;box-shadow:0 0 8px #26a69a;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.header-nav{display:flex;gap:4px}
+.nav-tab{padding:8px 20px;border-radius:6px;cursor:pointer;color:#787b86;font-size:14px;font-weight:500;transition:all .2s;border:none;background:none}
+.nav-tab:hover{color:#d1d4dc;background:#1c2030}
+.nav-tab.active{color:#fff;background:#1e2530}
+.header-time{color:#787b86;font-size:12px}
+
+/* ========== Main ========== */
+.main{margin-top:56px;padding:20px 24px;max-width:1600px;margin-left:auto;margin-right:auto}
+.section{display:none}
+.section.active{display:block}
+
+/* ========== News Section ========== */
+.news-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px}
+.region-tabs{display:flex;gap:4px;flex-wrap:wrap}
+.region-tab{padding:6px 16px;border-radius:20px;cursor:pointer;color:#787b86;font-size:13px;font-weight:500;transition:all .2s;border:1px solid #2a2e39;background:#131722}
+.region-tab:hover{color:#d1d4dc;border-color:#3a3e49}
+.region-tab.active{color:#fff;border-color:#2962ff;background:rgba(41,98,255,.15)}
+.news-meta{font-size:12px;color:#787b86}
+.news-meta span{color:#2962ff;font-weight:600}
+
+.region-summary{background:linear-gradient(135deg,#131722 0%,#0f1320 100%);border:1px solid #1e2530;border-radius:12px;padding:20px 24px;margin-bottom:20px}
+.region-summary h3{font-size:16px;margin-bottom:8px;color:#fff}
+.region-summary .predictions{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px}
+.pred-badge{padding:3px 12px;border-radius:12px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:4px}
+.pred-bullish{background:rgba(38,166,154,.15);color:#26a69a;border:1px solid rgba(38,166,154,.3)}
+.pred-bearish{background:rgba(239,83,80,.15);color:#ef5350;border:1px solid rgba(239,83,80,.3)}
+.pred-neutral{background:rgba(255,193,7,.15);color:#ffc107;border:1px solid rgba(255,193,7,.3)}
+
+.news-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:16px}
+.news-card{background:#131722;border:1px solid #1e2530;border-radius:10px;padding:18px;transition:all .2s;position:relative;overflow:hidden}
+.news-card:hover{border-color:#2a3a4e;transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.news-card::before{content:'';position:absolute;left:0;top:0;width:4px;height:100%}
+.news-card.bullish::before{background:#26a69a}
+.news-card.bearish::before{background:#ef5350}
+.news-card.neutral::before{background:#ffc107}
+.news-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px}
+.news-card-title{font-size:15px;font-weight:600;color:#fff;line-height:1.4;flex:1}
+.news-card-pred{padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;white-space:nowrap;flex-shrink:0}
+.news-card .pred-bullish{background:rgba(38,166,154,.2);color:#26a69a}
+.news-card .pred-bearish{background:rgba(239,83,80,.2);color:#ef5350}
+.news-card .pred-neutral{background:rgba(255,193,7,.2);color:#ffc107}
+.news-card-meta{display:flex;gap:8px;font-size:12px;color:#787b86;margin-bottom:8px}
+.news-card-meta .source{color:#5d9cec}
+.news-card-summary{font-size:13px;color:#b2b5bc;line-height:1.5;margin-bottom:10px}
+.news-card-sectors{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.sector-tag{padding:2px 8px;border-radius:4px;font-size:11px;background:rgba(124,58,237,.15);color:#a78bfa;border:1px solid rgba(124,58,237,.2)}
+.news-card-indices{font-size:12px;color:#787b86;margin-bottom:8px}
+.news-card-indices strong{color:#5d9cec}
+.news-card-analysis{font-size:12px;color:#9ca3af;line-height:1.5;background:rgba(255,255,255,.03);border-radius:6px;padding:8px 10px;border-left:2px solid #2962ff}
+.news-card-analysis strong{color:#e0e3eb}
+
+/* ========== Stock Section ========== */
+.stock-search-bar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center}
+.search-input-wrap{position:relative;flex:1;min-width:300px;max-width:500px}
+.search-input{width:100%;padding:10px 16px 10px 40px;border-radius:8px;border:1px solid #2a2e39;background:#131722;color:#d1d4dc;font-size:14px;outline:none;transition:border-color .2s}
+.search-input:focus{border-color:#2962ff}
+.search-input::placeholder{color:#5a5d66}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#787b86;font-size:16px}
+.market-toggle{display:flex;border:1px solid #2a2e39;border-radius:8px;overflow:hidden}
+.market-btn{padding:8px 16px;cursor:pointer;color:#787b86;font-size:13px;font-weight:500;background:#131722;border:none;transition:all .2s}
+.market-btn.active{color:#fff;background:#1e2530}
+.market-btn:hover:not(.active){color:#d1d4dc}
+.search-results{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#171b26;border:1px solid #2a2e39;border-radius:8px;max-height:320px;overflow-y:auto;z-index:50;display:none;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.search-results.show{display:block}
+.search-item{padding:10px 14px;cursor:pointer;border-bottom:1px solid #1e2530;transition:background .15s}
+.search-item:hover{background:#1c2030}
+.search-item:last-child{border-bottom:none}
+.search-item-code{font-size:12px;color:#787b86}
+.search-item-name{font-size:14px;color:#d1d4dc;margin-top:2px}
+.search-item-market{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;margin-left:6px}
+.market-sh{background:rgba(239,83,80,.15);color:#ef5350}
+.market-sz{background:rgba(38,166,154,.15);color:#26a69a}
+.market-us{background:rgba(41,98,255,.15);color:#5d9cec}
+
+.stock-detail{background:#131722;border:1px solid #1e2530;border-radius:12px;padding:24px;margin-bottom:20px;display:none}
+.stock-detail.show{display:block}
+.stock-detail-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+.stock-name-block{display:flex;align-items:center;gap:12px}
+.stock-name{font-size:24px;font-weight:700;color:#fff}
+.stock-code{font-size:14px;color:#787b86}
+.stock-price-block{text-align:right}
+.stock-price{font-size:36px;font-weight:700}
+.stock-price.up{color:#26a69a}
+.stock-price.down{color:#ef5350}
+.stock-change{font-size:16px;font-weight:600;margin-top:4px}
+.stock-change.up{color:#26a69a}
+.stock-change.down{color:#ef5350}
+.stock-change span{font-size:13px;opacity:.8;margin-left:4px}
+.stock-metrics{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.metric{background:rgba(255,255,255,.03);border-radius:8px;padding:12px;text-align:center}
+.metric-label{font-size:11px;color:#787b86;margin-bottom:4px}
+.metric-value{font-size:16px;font-weight:600;color:#d1d4dc}
+.metric-value.up{color:#26a69a}
+.metric-value.down{color:#ef5350}
+.stock-actions{display:flex;gap:8px;margin-top:16px}
+.btn{padding:8px 18px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:500;transition:all .2s}
+.btn-primary{background:#2962ff;color:#fff}
+.btn-primary:hover{background:#1e54e7}
+.btn-outline{background:none;border:1px solid #2a2e39;color:#d1d4dc}
+.btn-outline:hover{border-color:#3a3e49}
+.btn-danger{background:none;border:1px solid rgba(239,83,80,.3);color:#ef5350}
+.btn-danger:hover{background:rgba(239,83,80,.1)}
+
+.hot-stocks{margin-bottom:20px}
+.hot-stocks h3{font-size:15px;color:#fff;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.hot-stocks h3::before{content:'';width:3px;height:16px;background:#2962ff;border-radius:2px}
+.hot-stocks-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+.hot-stock-chip{padding:8px 12px;border-radius:6px;border:1px solid #2a2e39;background:#131722;cursor:pointer;text-align:center;transition:all .15s}
+.hot-stock-chip:hover{border-color:#2962ff;background:#171b26;transform:translateY(-1px)}
+.hot-stock-chip .code{font-size:11px;color:#787b86}
+.hot-stock-chip .name{font-size:13px;color:#d1d4dc;margin-top:2px}
+
+.watchlist{background:#131722;border:1px solid #1e2530;border-radius:12px;padding:20px}
+.watchlist h3{font-size:15px;color:#fff;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.watchlist h3::before{content:'';width:3px;height:16px;background:#ffc107;border-radius:2px}
+.watchlist-items{display:flex;flex-wrap:wrap;gap:8px}
+.watchlist-empty{color:#5a5d66;font-size:13px;text-align:center;padding:20px}
+.watchlist-chip{padding:6px 14px;border-radius:6px;border:1px solid #2a2e39;background:#171b26;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:13px;transition:all .15s}
+.watchlist-chip:hover{border-color:#3a3e49}
+.watchlist-chip .remove{color:#5a5d66;cursor:pointer;font-size:14px}
+.watchlist-chip .remove:hover{color:#ef5350}
+
+.loading{text-align:center;padding:40px;color:#787b86}
+.loading .spinner{display:inline-block;width:28px;height:28px;border:3px solid #2a2e39;border-top-color:#2962ff;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error-msg{text-align:center;padding:20px;color:#ef5350;font-size:13px}
+
+/* ========== Responsive ========== */
+@media(max-width:768px){
+  .header{padding:0 12px}
+  .header-logo{font-size:15px}
+  .header-time{display:none}
+  .main{padding:12px}
+  .news-grid{grid-template-columns:1fr}
+  .stock-metrics{grid-template-columns:repeat(2,1fr)}
+  .stock-name{font-size:20px}
+  .stock-price{font-size:28px}
+}
+
+/* ========== Index Section ========== */
+.index-overview{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:24px}
+.index-card{background:#131722;border:1px solid #1e2530;border-radius:10px;padding:16px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.index-card:hover{border-color:#2a3a4e;transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.index-card.region-china{border-top:3px solid #ef5350}
+.index-card.region-us{border-top:3px solid #2962ff}
+.index-card.region-asia{border-top:3px solid #ff9800}
+.index-card.region-europe{border-top:3px solid #ab47bc}
+.index-card.region-global{border-top:3px solid #26a69a}
+.index-card .idx-name{font-size:13px;color:#787b86;margin-bottom:4px}
+.index-card .idx-price{font-size:22px;font-weight:700;color:#fff;line-height:1.2}
+.index-card .idx-change{font-size:13px;font-weight:600;margin-top:2px}
+.index-card .idx-change.up{color:#26a69a}
+.index-card .idx-change.down{color:#ef5350}
+.index-card .idx-meta{display:flex;gap:10px;font-size:11px;color:#5a5d66;margin-top:8px;border-top:1px solid #1e2530;padding-top:6px}
+.index-card .idx-risk{font-weight:600}
+.index-card .idx-risk.high{color:#ef5350}
+.index-card .idx-risk.medium{color:#ffc107}
+.index-card .idx-risk.low{color:#26a69a}
+
+.index-detail{background:#131722;border:1px solid #1e2530;border-radius:12px;padding:24px;margin-bottom:20px;display:none}
+.index-detail.show{display:block}
+.index-detail-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:12px}
+.index-detail-name{font-size:22px;font-weight:700;color:#fff}
+.index-detail-code{font-size:13px;color:#787b86;margin-top:2px}
+.index-detail-price-block{text-align:right}
+.index-detail-price{font-size:32px;font-weight:700}
+.index-detail-price.up{color:#26a69a}
+.index-detail-price.down{color:#ef5350}
+.index-detail-change{font-size:14px;font-weight:600;margin-top:4px}
+.index-detail-change.up{color:#26a69a}
+.index-detail-change.down{color:#ef5350}
+.index-metrics-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-bottom:16px}
+.index-analysis-box{background:rgba(255,255,255,.03);border-radius:8px;padding:16px;border-left:3px solid #2962ff}
+.index-analysis-box h4{font-size:14px;color:#fff;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.index-analysis-box h4 .risk-tag{padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.index-analysis-box h4 .risk-tag.high{background:rgba(239,83,80,.2);color:#ef5350}
+.index-analysis-box h4 .risk-tag.medium{background:rgba(255,193,7,.2);color:#ffc107}
+.index-analysis-box h4 .risk-tag.low{background:rgba(38,166,154,.2);color:#26a69a}
+.index-analysis-box p{font-size:13px;color:#9ca3af;line-height:1.6}
+.index-analysis-box .factors{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.index-analysis-box .factor-chip{padding:2px 10px;border-radius:4px;font-size:11px;background:rgba(124,58,237,.12);color:#a78bfa;border:1px solid rgba(124,58,237,.2)}
+.index-analysis-box .factor-chip.neg{background:rgba(239,83,80,.12);color:#ef5350;border-color:rgba(239,83,80,.2)}
+.index-analysis-box .factor-chip.pos{background:rgba(38,166,154,.12);color:#26a69a;border-color:rgba(38,166,154,.2)}
+
+.region-group{margin-bottom:24px}
+.region-group h3{font-size:15px;color:#fff;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.region-group h3 .rg-dot{width:8px;height:8px;border-radius:50%}
+.region-group h3 .rg-dot.china{background:#ef5350}
+.region-group h3 .rg-dot.us{background:#2962ff}
+.region-group h3 .rg-dot.asia{background:#ff9800}
+.region-group h3 .rg-dot.europe{background:#ab47bc}
+.region-group h3 .rg-dot.global{background:#26a69a}
+.region-group h3 .rg-count{font-size:12px;color:#5a5d66;font-weight:400}
+</style>
+</head>
+<body>
+
+<!-- ========== Header ========== -->
+<div class="header">
+  <div class="header-logo">
+    <span class="dot"></span>
+    <span>全球金融看板</span>
+  </div>
+  <div class="header-nav">
+    <button class="nav-tab active" data-section="news">新闻看板</button>
+    <button class="nav-tab" data-section="index">全球指数</button>
+    <button class="nav-tab" data-section="stock">股票行情</button>
+  </div>
+  <div class="header-time" id="headerTime"></div>
+</div>
+
+<!-- ========== Main ========== -->
+<div class="main">
+
+  <!-- ========== News Section ========== -->
+  <div class="section active" id="newsSection">
+    <div class="news-toolbar">
+      <div class="region-tabs" id="regionTabs">
+        <button class="region-tab active" data-region="global">全球</button>
+        <button class="region-tab" data-region="us">美国</button>
+        <button class="region-tab" data-region="asia">亚洲</button>
+        <button class="region-tab" data-region="europe">欧洲</button>
+        <button class="region-tab" data-region="china">中国</button>
+      </div>
+      <div class="news-meta">
+        近7天新闻 · 筛选自<span id="newsCount">500+</span>条 · 精选<span>10</span>条/区域
+      </div>
+    </div>
+    <div id="regionSummary"></div>
+    <div class="news-grid" id="newsGrid"></div>
+  </div>
+
+  <!-- ========== Index Section ========== -->
+  <div class="section" id="indexSection">
+    <div class="news-toolbar">
+      <div class="region-tabs" id="indexRegionTabs">
+        <button class="region-tab active" data-iregion="all">全部</button>
+        <button class="region-tab" data-iregion="china">中国</button>
+        <button class="region-tab" data-iregion="us">美国</button>
+        <button class="region-tab" data-iregion="asia">亚洲</button>
+        <button class="region-tab" data-iregion="europe">欧洲</button>
+        <button class="region-tab" data-iregion="global">全球宏观</button>
+      </div>
+      <div class="news-meta">
+        <span id="indexRefreshLabel">实时行情</span> · 点击指数卡片查看<span>风险分析</span>
+      </div>
+    </div>
+    <div id="indexOverview"></div>
+    <div class="index-detail" id="indexDetail">
+      <div id="indexDetailContent"></div>
+    </div>
+    <div id="indexGroups"></div>
+  </div>
+
+  <!-- ========== Stock Section ========== -->
+  <div class="section" id="stockSection">
+    <div class="stock-search-bar">
+      <div class="search-input-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" id="stockSearch" placeholder="输入股票名称或代码（如 贵州茅台 / 600519 / AAPL）" autocomplete="off">
+        <div class="search-results" id="searchResults"></div>
+      </div>
+      <div class="market-toggle" id="marketToggle">
+        <button class="market-btn active" data-market="all">全部</button>
+        <button class="market-btn" data-market="cn">A股</button>
+        <button class="market-btn" data-market="us">美股</button>
+      </div>
+    </div>
+
+    <div class="stock-detail" id="stockDetail">
+      <div id="stockDetailContent"></div>
+    </div>
+
+    <div class="hot-stocks">
+      <h3>A股热门</h3>
+      <div class="hot-stocks-grid" id="hotStocksCN"></div>
+    </div>
+    <div class="hot-stocks">
+      <h3>美股热门</h3>
+      <div class="hot-stocks-grid" id="hotStocksUS"></div>
+    </div>
+
+    <div class="watchlist">
+      <h3>自选列表</h3>
+      <div class="watchlist-items" id="watchlist"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ==================== NEWS DATA ====================
+const NEWS_DATA = {
+  global: [
+    { t:"美伊冲突升级：美军封锁伊朗全境港口及石油码头", s:"国际金融报", d:"2026-07-15", sum:"美军开始执行对所有伊朗港口及沿海地区的海上封锁，封锁适用于所有船舶，涵盖伊朗全境海岸线包括石油码头。霍尔木兹海峡非伊朗目的地不受影响。", sec:["能源","军工","航运","保险"], pre:"利空", det:"霍尔木兹海峡是全球石油运输咽喉，封锁将冲击全球约20%的石油海运量。预计布伦特原油短期上涨5-10%，避险资产黄金和美元走强，航运和保险费率上升。", idx:["布伦特原油","WTI原油","COMEX黄金","美元指数"] },
+    { t:"美联储理事沃勒警告：若核心通胀持续高企或需加息", s:"华尔街见闻", d:"2026-07-14", sum:"美联储理事沃勒表示不应过度解读单月数据放缓，若潜在通胀显示广泛价格压力，联储可能需短期内提高利率。市场7月加息概率从35%升至45%。", sec:["银行","科技","房地产"], pre:"利空", det:"加息预期升温将推高美债收益率，压制高估值成长股。纳斯达克和科技板块首当其冲，房地产受抵押贷款利率上升影响。美元走强压制大宗商品。", idx:["纳斯达克","标普500","美债10Y","美元指数"] },
+    { t:"世界银行下调2026年全球经济增长预期至2.5%", s:"宏观周报", d:"2026-07-13", sum:"世界银行最新报告认为，受能源供应冲击影响，全球经济增速将从2025年的2.9%放缓至2026年的2.5%。预计2027-2028年随能源价格回落有望修复。", sec:["全行业"], pre:"利空", det:"全球增长放缓意味着企业盈利承压，新兴市场资金外流风险加大。但2027年修复预期为市场中长期提供支撑。", idx:["MSCI全球指数","新兴市场指数"] },
+    { t:"IMF下调2026年世界经济增长预期至3%", s:"宏观周报", d:"2026-07-13", sum:"IMF更新世界经济展望报告，将2026年世界经济增长预期下调0.1个百分点至3%，反映中东战事带来的冲击。", sec:["全行业"], pre:"利空", det:"IMF下调与世行下调形成共振，强化全球经济放缓预期。地缘风险溢价上升，风险资产估值承压。", idx:["MSCI全球指数","VIX恐慌指数"] },
+    { t:"债券通南向通扩容至8000亿元，香港固收市场迎利好", s:"中国银河证券", d:"2026-07-13", sum:"央行行长潘功胜宣布将债券通南向通年度投资净额度从5000亿元提升至8000亿元，南向通债券纳入回购支持范围，产品拓展至港币和人民币债券。", sec:["债券","银行","离岸人民币"], pre:"利多", det:"扩容将增加南向资金流入香港债市，利好离岸人民币市场流动性。中资美元债和港元债需求提升，香港金融中心地位巩固。", idx:["恒生指数","离岸人民币","中债指数"] },
+    { t:"2026世界AI大会7月17日在上海举行，习近平将出席", s:"外交部", d:"2026-07-14", sum:"2026世界人工智能大会暨AI全球治理高级别会议将于7月17-20日在上海举行，国家主席习近平将出席开幕式并发表主旨讲话。", sec:["人工智能","半导体","云计算"], pre:"利多", det:"最高规格AI大会叠加主席出席，释放强烈政策信号。AI产业链（算力、芯片、应用）有望迎来政策催化，科创50和科技板块受益。", idx:["科创50","创业板指","上证指数"] },
+    { t:"大宗商品极端分化：黄金暴跌原油暴涨", s:"东方财富", d:"2026-07-13", sum:"现货黄金单边跳水大跌0.82%报4085美元，WTI原油暴力拉升大涨2.87%站稳73.48美元。避险资产与能源商品彻底分道扬镳。", sec:["黄金","原油","大宗商品"], pre:"中性", det:"黄金回调系加息预期压制，原油上涨系地缘冲突推升。分极端分化反映市场对通胀与避险的矛盾预期，配置需平衡两端。", idx:["COMEX黄金","WTI原油","布伦特原油"] },
+    { t:"比特币受地缘冲突打压跌至62767美元", s:"区块链分析", d:"2026-07-13", sum:"比特币处于下降楔形区间，关键支撑58000-60000美元，阻力65000美元。链上活跃度下滑，但美现货ETF结束八周流出重回净流入。", sec:["加密货币","区块链"], pre:"利空", det:"地缘风险压制风险偏好，BTC短期偏弱。但ETF重回净流入显示机构资金信心未失，突破65000美元有望转强。", idx:["比特币","以太坊","加密货币总市值"] },
+    { t:"COMEX黄金期货报4066.90美元/盎司，白银报58.10", s:"华安基金", d:"2026-07-16", sum:"隔夜COMEX黄金期货跌0.07%报4066.90美元/盎司，COMEX白银期货跌1.70%报58.10美元/盎司。", sec:["黄金","白银","贵金属"], pre:"中性", det:"黄金在4000美元上方震荡，加息预期与地缘风险多空交织。白银跌幅较大显示工业属性承压。中长期黄金在央行购金支撑下仍偏强。", idx:["COMEX黄金","COMEX白银"] },
+    { t:"WTI原油报80.24美元/桶，布伦特84.85美元", s:"华安基金", d:"2026-07-16", sum:"WTI原油上涨1.13%报80.24美元/桶，布伦特原油上涨0.14%报84.85美元/桶。美国6月核心PPI数据公布。", sec:["能源","石化","航空"], pre:"利空", det:"油价站上80美元对航空运输业成本压力加大，石化产业链输入性通胀上升。但能源股和油服板块直接受益。", idx:["WTI原油","布伦特原油","航空板块"] }
+  ],
+  us: [
+    { t:"美联储新任主席沃什国会听证首秀，内部加息分歧加深", s:"腾讯网", d:"2026-07-14", sum:"美联储新任主席沃什即将迎来国会听证首秀，内部加息分歧持续加深。市场聚焦6月CPI数据与美伊冲突引发的通胀升温压力，加息预期攀升。", sec:["银行","科技","全行业"], pre:"利空", det:"沃什听证会将释放货币政策信号，若鹰派表态将推升美债收益率和美元，压制美股估值。科技股对利率高度敏感，首当其冲。", idx:["标普500","纳斯达克","美债10Y","美元指数"] },
+    { t:"美联储发布半年度货币政策报告：通胀2026年3月加速", s:"腾讯网", d:"2026-07-14", sum:"美联储7月13日发布半年度货币政策报告，称通胀自2025年底开始升温并于2026年3月加速。货币政策走向陷入维持不变还是重启加息的悬念。", sec:["银行","房地产","消费"], pre:"利空", det:"通胀加速确认强化加息预期。美联储偏鹰将压制风险资产，房地产受抵押利率上升冲击，消费板块受购买力下降影响。", idx:["标普500","道琼斯","美元指数"] },
+    { t:"7月加息概率从35%升至45%，美股美债黄金齐跌", s:"华尔街见闻", d:"2026-07-14", sum:"市场预计7月加息概率为45%（此前35%），美股、美债、黄金同跌。美联储理事沃勒鹰派言论是主要催化。", sec:["科技","房地产","黄金"], pre:"利空", det:"三杀行情罕见，反映市场对滞胀风险的担忧。加息预期若持续升温，高估值科技股面临杀估值压力，黄金受实际利率上行压制。", idx:["纳斯达克","标普500","COMEX黄金"] },
+    { t:"特朗普称若冗长辩论不终结，9月可能政府停摆", s:"财联社", d:"2026-07-13", sum:"美国总统特朗普称，若冗长辩论规则不终结，9月可能出现政府停摆。", sec:["全行业"], pre:"利空", det:"政府停摆将导致经济数据暂停发布、联邦支出中断，增加政治不确定性。历史上停摆前后市场波动加大，避险情绪升温。", idx:["标普500","道琼斯","VIX恐慌指数"] },
+    { t:"美国6月CPI数据本周公布，将决定7月加息走向", s:"市场聚焦", d:"2026-07-14", sum:"本周二6月CPI数据与沃什国会听证会将形成通胀与政策双验证。CPI若超预期将大幅推升加息概率。", sec:["全行业","黄金","美债"], pre:"中性", det:"CPI是7月议息前最关键数据。核心CPI环比超0.3%将强化加息预期，低于0.2%则缓解压力。市场在数据前倾向观望。", idx:["标普500","美元指数","COMEX黄金","美债10Y"] },
+    { t:"纽约联储模型显示未来12个月衰退概率约15.8%", s:"雪球", d:"2026-07-13", sum:"纽约联储收益率曲线模型显示未来12个月衰退概率约15.8%，10年期-3个月期利差为正向+0.71个百分点，曲线已恢复正常形态。低于30%通常视为低风险。", sec:["全行业"], pre:"利多", det:"收益率曲线正常化是经济健康信号，衰退概率处于历史低位支持软着陆预期。利好风险资产中期表现。", idx:["标普500","道琼斯","美债10Y"] },
+    { t:"7月15日美股收盘：道指52658 标普7572 纳指26269", s:"网易财经", d:"2026-07-16", sum:"美股7月15日收盘：道琼斯52658.64(+0.29%)，标普500 7572.40(+0.38%)，纳斯达克26269.23(+0.62%)。科技股领涨。", sec:["科技","全行业"], pre:"中性", det:"三大指数全线收涨，纳指涨幅领先显示科技股韧性。但在加息预期背景下，涨幅可能难以持续，关注后续CPI数据验证。", idx:["道琼斯","标普500","纳斯达克"] },
+    { t:"美国6月核心PPI数据公布，通胀验证关键", s:"华安基金", d:"2026-07-16", sum:"美国劳工统计局公布6月核心生产者价格指数(PPI)数据，作为CPI的先行指标，将进一步验证通胀趋势。", sec:["全行业","美债"], pre:"中性", det:"PPI传导至CPI通常有1-2个月滞后。核心PPI超预期将强化加息预期，低于预期则提供宽松空间。市场将据此调整7月议息押注。", idx:["美债10Y","美元指数","标普500"] },
+    { t:"美国五大银行本周发布财报，业绩指引经济健康", s:"下周投资事件", d:"2026-07-11", sum:"美国五大银行（摩根大通、美国银行、花旗、富国、摩根士丹利）本周发布二季度财报，银行业绩将全面反映经济健康状况。", sec:["银行","金融"], pre:"中性", det:"银行净利息收入受加息预期支撑，但信贷质量若恶化将引发担忧。关注贷款增长和不良率指引，金融板块ETF(XLF)波动加大。", idx:["XLF金融ETF","标普500","道琼斯"] },
+    { t:"ASML二季报即将发布，半导体周期风向标", s:"下周投资事件", d:"2026-07-11", sum:"半导体设备龙头ASML本周发布二季报，作为全球半导体产业链上游风向标，业绩将指引行业周期判断。", sec:["半导体","科技"], pre:"中性", det:"ASML订单簿是半导体资本开支先行指标。若订单超预期将提振费城半导体指数和全球芯片股，反之则加剧周期见顶担忧。", idx:["费城半导体指数(SOX)","纳斯达克","科创50"] }
+  ],
+  asia: [
+    { t:"韩国KOSPI暴跌8.95%触发全市场熔断，从高点回撤超25%", s:"百家号", d:"2026-07-13", sum:"7月13日韩国KOSPI大跌8.95%收于6806.93点，触发全市场熔断（跌幅超8%持续1分钟），自6月22日高点回撤超25%，三周内从牛市进入技术性熊市。", sec:["半导体","科技","金融"], pre:"利空", det:"三星、SK海力士权重超四成，杠杆ETF放大波动。三周内从牛市到熊市极为罕见，信用盘危机蔓延可能引发区域金融风险传染。", idx:["KOSPI","MSCI亚太指数","韩元汇率"] },
+    { t:"韩国综合指数7月15日反弹6.24%至7284点", s:"中国证券网", d:"2026-07-15", sum:"7月15日日韩股市集体收涨，日经225涨1.49%报68751.52点，韩国综合指数涨6.24%报7284.41点，超跌反弹力度强劲。", sec:["半导体","科技"], pre:"利多", det:"6.24%反弹显示抄底资金入场，但杠杆ETF去杠杆过程未结束，反弹持续性存疑。需关注后续成交量能否维持。", idx:["KOSPI","日经225"] },
+    { t:"韩国监管层全面收紧单一股票杠杆ETF", s:"华尔街见闻", d:"2026-07-14", sum:"韩国监管层全面收紧单一股票杠杆ETF，F4高层会议将研究抑制波动措施。韩国五大银行已用掉85%全年家庭贷款额度。", sec:["金融","科技"], pre:"中性", det:"监管收紧短期可能引发杠杆资金被动平仓，加剧波动。但长期有助于市场稳定，降低系统性风险。关注资金外流对韩元影响。", idx:["KOSPI","韩元汇率"] },
+    { t:"日本央行年内再加息预期升温，5月薪资增速超3%", s:"东南亚研究", d:"2026-07-13", sum:"日本5月薪资增速维持在3%以上，6月PPI通胀超预期上行，市场对日本央行年内再加息的预期进一步升温。", sec:["银行","出口","房地产"], pre:"利空", det:"日央行加息将推升日元，压制出口企业盈利。日经225成分股中丰田、索尼等出口巨头承压。但银行股受益于息差扩大。", idx:["日经225","美元/日元","日本10Y国债"] },
+    { t:"韩国央行预计7月16日加息25bp至2.75%", s:"东南亚研究", d:"2026-07-13", sum:"韩国6月通胀继续升温，叠加经济增长改善与金融稳定风险上升，市场高度定价韩国央行将于7月16日加息25bp至2.75%。", sec:["银行","房地产"], pre:"利空", det:"韩国央行紧缩加码将推升韩元利率，房地产和家庭部门杠杆压力加大。但在股市剧烈波动期加息可能加剧信用风险。", idx:["KOSPI","韩元汇率","韩国国债"] },
+    { t:"恐慌抛售引发3442亿韩元强制平仓，信用盘危机蔓延", s:"财经早餐", d:"2026-07-11", sum:"韩国股市恐慌抛售引发3442亿韩元强制平仓潮，借钱炒股面临刹车。韩国五大银行已用掉85%全年家庭贷款额度。", sec:["金融","科技"], pre:"利空", det:"强制平仓形成恶性循环：下跌→平仓→更多下跌。信用危机若扩散至银行体系，可能引发系统性风险。关注央行干预。", idx:["KOSPI","韩元汇率"] },
+    { t:"日经225指数报68751，出口股受益于日元走弱", s:"中国证券网", d:"2026-07-15", sum:"日经225指数涨1.49%报68751.52点。日元走弱利好丰田、索尼等出口巨头，但加息预期下汇率可能反转。", sec:["汽车","电子","出口"], pre:"利多", det:"日元走弱提升出口企业海外利润换汇收益。但若日央行加息预期兑现，日元走强将逆转这一逻辑，需关注汇率拐点。", idx:["日经225","美元/日元"] },
+    { t:"东南亚经济体CPI大多回落，货币政策空间打开", s:"东南亚研究", d:"2026-07-13", sum:"新加坡和马来西亚CPI保持低位稳定，菲律宾、越南、泰国6月CPI明显回落。东南亚经济体通胀压力减轻。", sec:["消费","银行","旅游"], pre:"利多", det:"通胀回落为东南亚央行提供降息空间，利好消费和地产板块。东南亚股市和债市可能吸引外资流入。", idx:["MSCI东南亚指数","新加坡海峡指数"] },
+    { t:"韩国股市KOSPI市盈率降至6.25倍，低于金融危机低点", s:"财经早餐", d:"2026-07-11", sum:"KOSPI市盈率降至6.25倍，低于2008年金融危机低点。三星、SK海力士权重超四成，单一股票杠杆ETF放大波动。", sec:["半导体","价值投资"], pre:"利多", det:"极低估值从长期看是价值投资机会，但短期波动风险极大。全球半导体周期若见底回升，韩国股市有望强劲反弹。", idx:["KOSPI","三星电子"] },
+    { t:"亚洲股市集体大涨，MSCI亚太指数上涨0.6%", s:"ZAKER", d:"2026-07-10", sum:"7月10日亚太股市普遍走高，韩国KOSPI一度涨超3%，三星、SK海力士双双涨超4%。日经225涨超1000点涨幅1.51%。MSCI亚太指数整体上涨0.6%。", sec:["半导体","科技","出口"], pre:"利多", det:"华尔街科技股反弹带动亚洲市场接力上涨。半导体板块情绪回暖，但后续韩国杠杆ETF危机打断涨势，需区分短期反弹与趋势反转。", idx:["MSCI亚太指数","日经225","KOSPI"] }
+  ],
+  europe: [
+    { t:"德国DAX30报24909点，跌0.44%，汽车工业板块承压", s:"汇通财经", d:"2026-07-16", sum:"德国DAX30指数7月16日收盘下跌109.82点，跌幅0.44%，报24908.99点。汽车和工业板块承压。", sec:["汽车","工业","化工"], pre:"中性", det:"德国经济高度依赖出口，全球增长放缓和贸易不确定性压制DAX。大众、宝马等汽车股受全球需求疲软影响。", idx:["德国DAX30","欧元汇率"] },
+    { t:"英国富时100报10571点，涨0.52%，能源金融领涨", s:"汇通财经", d:"2026-07-16", sum:"英国富时100指数7月16日收盘上涨54.63点，涨幅0.52%，报10570.55点。能源和金融板块领涨。", sec:["能源","金融","矿业"], pre:"利多", det:"富时100中壳牌、BP等能源股权重较大，受益于油价上涨。金融股受加息预期支撑。英国股市相对防御性更强。", idx:["英国富时100","布伦特原油"] },
+    { t:"法国CAC40报8378点，跌0.05%，奢侈品板块疲软", s:"汇通财经", d:"2026-07-16", sum:"法国CAC40指数7月16日收盘下跌4.57点，跌幅0.05%，报8377.86点。奢侈品板块表现疲软。", sec:["奢侈品","航空","银行"], pre:"中性", det:"LVMH、开云等奢侈品巨头受全球消费放缓影响。中国消费者需求恢复不及预期压制估值。空客受益于航空复苏。", idx:["法国CAC40","欧元汇率"] },
+    { t:"欧洲斯托克50报6282点，涨0.26%，整体微涨", s:"汇通财经", d:"2026-07-16", sum:"欧洲斯托克50指数7月16日收盘上涨15.98点，涨幅0.26%，报6281.56点。欧洲股市整体小幅上涨。", sec:["全行业"], pre:"中性", det:"欧股整体表现平稳，但缺乏强劲催化剂。欧央行利率政策不确定性和中东地缘风险构成压制因素。", idx:["欧洲斯托克50","欧元汇率"] },
+    { t:"7月14日欧股多数上行，德国DAX涨0.19%法国CAC涨0.31%", s:"金投网", d:"2026-07-14", sum:"7月14日全球股市多数上行：德国DAX30涨0.19%，法国CAC40涨0.31%，英国富时100涨0.01%。", sec:["全行业"], pre:"利多", det:"欧股跟随全球风险偏好回暖上涨。但涨幅有限反映市场谨慎情绪，地缘冲突和加息预期仍是悬而未决的风险。", idx:["DAX30","CAC40","富时100"] },
+    { t:"美伊冲突对欧洲能源供应构成潜在风险", s:"市场分析", d:"2026-07-15", sum:"美军封锁伊朗港口可能影响中东对欧洲的石油和天然气供应。欧洲高度依赖中东能源进口，供应中断将推升能源价格。", sec:["能源","化工","航空"], pre:"利空", det:"欧洲能源安全面临考验。若油价持续上涨，欧洲通胀可能再度升温，迫使欧央行维持鹰派。化工和航空业成本压力加大。", idx:["布伦特原油","DAX30","欧洲能源板块"] },
+    { t:"欧央行利率政策走向不确定，关注通胀数据", s:"市场分析", d:"2026-07-15", sum:"欧央行利率政策走向不确定。若能源价格推升通胀，可能迫使欧央行维持紧缩；若经济放缓，则需考虑降息。", sec:["银行","房地产","债券"], pre:"中性", det:"欧央行面临通胀与增长的两难。鹰派利好银行股息差，鸽派利好房地产和成长股。欧元汇率对政策预期高度敏感。", idx:["欧元汇率","欧洲斯托克50","欧洲国债"] },
+    { t:"西班牙IBEX35与意大利富时MIB走势分化", s:"汇通财经", d:"2026-07-16", sum:"欧洲各国股指表现分化，西班牙和意大利股市受各自国内政治和经济因素影响，走势不一。", sec:["银行","旅游","能源"], pre:"中性", det:"南欧国家经济复苏不均衡，银行资产质量和公共财政状况差异导致市场表现分化。关注欧央行对南欧国债利差的态度。", idx:["西班牙IBEX35","意大利富时MIB"] },
+    { t:"欧洲汽车产业面临转型压力与需求疲软双重挑战", s:"行业分析", d:"2026-07-14", sum:"德国汽车巨头面临电动化转型成本高企与全球需求疲软双重压力。中国新能源车竞争加剧挤压欧洲车企市场份额。", sec:["汽车","新能源"], pre:"利空", det:"大众、奔驰、宝马等面临中国比亚迪等新能源车企强力竞争。电动化转型需巨额投资但短期回报有限，估值承压。", idx:["DAX30"," Stoxx600汽车板块"] },
+    { t:"欧洲国防军工板块受益于地缘冲突升级", s:"市场分析", d:"2026-07-14", sum:"美伊冲突升级推动欧洲国防军工股上涨。各国增加国防预算预期增强，莱茵金属、BAE等军工企业订单增长。", sec:["军工","航空航天"], pre:"利多", det:"地缘冲突长期化将推动欧洲各国持续增加国防开支。军工企业订单可见性提升，业绩增长确定性增强。", idx:["Stoxx600航空航天板块","DAX30"] }
+  ],
+  china: [
+    { t:"央行引导调控利率水平，促进社会综合融资成本低位运行", s:"财联社", d:"2026-07-16", sum:"央行副行长邹澜7月15日在国新办新闻发布会上表示，将根据宏观经济运行情况引导调控好利率水平，促进社会综合融资成本低位运行。", sec:["银行","房地产","基建"], pre:"利多", det:"货币政策维持宽松基调，LPR有下行空间。利好实体经济融资，银行息差收窄但资产质量改善，房地产和基建受益于低利率环境。", idx:["上证指数","沪深300","LPR"] },
+    { t:"6月末M2余额356.71万亿元，同比增长8%", s:"央行数据", d:"2026-07-16", sum:"央行数据显示，6月末广义货币(M2)余额356.71万亿元，同比增长8%。货币供应量平稳增长。", sec:["银行","全行业"], pre:"中性", det:"M2增速8%处于合理区间，流动性充裕但未过度。社融增速若同步回升将提振市场信心，关注信贷结构变化。", idx:["上证指数","沪深300","国债收益率"] },
+    { t:"长鑫科技IPO申购，拟募资295亿元为科创板第二大IPO", s:"百家号", d:"2026-07-12", sum:"长鑫科技7月16日网上申购，拟募资295亿元，为2026年以来A股最大IPO，也是科创板历史上第二大IPO。市场担忧资金分流。", sec:["半导体","科技"], pre:"利空", det:"巨量IPO短期分流市场资金，对流动性形成压力。但长鑫科技作为国产存储芯片龙头，上市后将带动半导体产业链估值重估，中长期利好。", idx:["科创50","上证指数","半导体板块"] },
+    { t:"2026世界AI大会习近平将出席，AI政策利好预期强", s:"新华社", d:"2026-07-14", sum:"2026世界人工智能大会暨AI全球治理高级别会议7月17-20日在上海举行，国家主席习近平将出席开幕式并发表主旨讲话。", sec:["人工智能","半导体","云计算"], pre:"利多", det:"最高规格AI大会释放强烈政策信号，网信办AI新规同周生效。算力、大模型、AI应用全产业链受益，科创50和创业板有望迎来催化。", idx:["科创50","创业板指","AI概念板块"] },
+    { t:"国务院批复扩大消费十五五规划，支持消费领域信贷", s:"中国证券报", d:"2026-07-14", sum:"国务院印发关于《扩大消费十五五规划》的批复，明确促进房地产市场健康发展，持续巩固资本市场稳中向好态势，支持金融机构扩大消费领域信贷投放。", sec:["消费","零售","房地产","银行"], pre:"利多", det:"消费十五五规划从顶层设计层面推动内需扩大。消费品、零售、家电板块直接受益。房地产稳定政策延续，银行消费信贷业务增长。", idx:["沪深300","上证指数","消费板块"] },
+    { t:"7月14日A股走出深V行情，上证收涨1.36%成交2.72万亿", s:"央广网", d:"2026-07-14", sum:"7月14日A股盘中大幅探底后午后集体反攻，走出典型深V行情。上证指数收涨1.36%报3967.13点，创业板指大涨3.43%。超4200只个股上涨，两市成交2.72万亿元。", sec:["全行业","新能源","科技"], pre:"利多", det:"深V反弹显示抄底资金积极入场，市场韧性较强。创业板大涨3.43%显示成长股领涨，情绪明显回暖。后续关注量能能否持续放大。", idx:["上证指数","创业板指","深证成指"] },
+    { t:"7月15日上证指数3956点跌0.29%，成交缩量1321亿", s:"雪球", d:"2026-07-15", sum:"7月15日上证指数收3955.58点跌0.29%，深证成指跌0.97%，创业板指跌1.21%。两市成交约2.59万亿元，缩量1321亿。个股涨跌比3351:2095。", sec:["全行业"], pre:"中性", det:"缩量回调属正常技术性整理。但创业板和深证跌幅较大显示成长股获利了结压力。市场需新的催化剂突破前高。", idx:["上证指数","深证成指","创业板指"] },
+    { t:"科创50大幅杀跌4.25%，半导体板块回调", s:"雪球", d:"2026-07-15", sum:"7月15日科创50指数大跌4.25%报1924.27点。半导体板块领跌，科技股面临获利了结压力。", sec:["半导体","科技"], pre:"利空", det:"科创50大跌4.25%反映前期涨幅较大后的技术性回调。但长鑫科技IPO和AI大会双重催化在即，调整可能提供上车机会。", idx:["科创50","半导体板块"] },
+    { t:"中国二季度GDP即将发布，经济复苏力度验证", s:"下周投资事件", d:"2026-07-11", sum:"中国二季度GDP数据本周发布，将验证经济复苏力度。叠加6月CPI、PPI等数据，影响市场对下半年政策预期。", sec:["全行业"], pre:"中性", det:"GDP增速若超预期将提振市场信心，低于预期则强化政策加码预期。关注消费和投资分项数据，判断复苏结构。", idx:["上证指数","沪深300","人民币汇率"] },
+    { t:"上市公司密集回购，透露市场底部信号", s:"央广网", d:"2026-07-15", sum:"面对近期二级市场波动加剧，越来越多上市公司加入回购阵营。密集回购通常被视为市场底部信号。", sec:["全行业"], pre:"利多", det:"产业资本回购反映管理层对公司价值认可，历史上密集回购期常对应市场阶段性底部。回购注销提升每股收益，直接利好股东。", idx:["上证指数","沪深300"] }
+  ]
+};
+
+// ==================== NEWS RENDERING ====================
+const REGION_NAMES = { global:"全球", us:"美国", asia:"亚洲", europe:"欧洲", china:"中国" };
+const REGION_SUMMARIES = {
+  global: "美伊冲突升级与美联储加息预期升温构成全球市场两大主线。能源价格受地缘冲突推升，黄金在4000美元上方震荡，比特币承压。AI大会和阿南向通扩容带来结构性利好。",
+  us: "美联储新主席沃什国会首秀与6月CPI数据为本周焦点。通胀加速确认推升7月加息概率至45%。五大银行财报和ASML业绩将验证经济与企业盈利健康。衰退概率15.8%仍处低位。",
+  asia: "韩国股市从牛市到技术性熊市仅三周，杠杆ETF危机引发强制平仓潮。日央行和韩央行加息预期同步升温。东南亚CPI回落提供政策宽松空间。KOSPI市盈率6.25倍处历史极低。",
+  europe: "欧股整体窄幅震荡，DAX微跌CAC持平富时微涨。美伊冲突对欧洲能源供应构成风险。汽车业面临电动化转型与需求疲软双重压力。国防军工板块受益于地缘冲突。",
+  china: "央行维持宽松基调引导融资成本下行，扩大消费十五五规划获批。长鑫科技295亿IPO短期分流资金但利好半导体产业链。AI大会最高规格出席释放政策信号。A股深V反弹后缩量整理。"
+};
+
+function renderNews(region) {
+  const grid = document.getElementById('newsGrid');
+  const summary = document.getElementById('regionSummary');
+  const news = NEWS_DATA[region] || [];
+
+  // Region summary
+  let bull = 0, bear = 0, neut = 0;
+  news.forEach(n => { if(n.pre==='利多')bull++; else if(n.pre==='利空')bear++; else neut++; });
+
+  summary.innerHTML = `
+    <div class="region-summary">
+      <h3>${REGION_NAMES[region]}区域市场研判</h3>
+      <p style="color:#9ca3af;font-size:13px;line-height:1.6">${REGION_SUMMARIES[region]}</p>
+      <div class="predictions">
+        <span class="pred-badge pred-bullish">利多 ${bull}条</span>
+        <span class="pred-badge pred-bearish">利空 ${bear}条</span>
+        <span class="pred-badge pred-neutral">中性 ${neut}条</span>
+      </div>
+    </div>
+  `;
+
+  // News cards
+  grid.innerHTML = news.map(n => {
+    const cls = n.pre === '利多' ? 'bullish' : n.pre === '利空' ? 'bearish' : 'neutral';
+    const predCls = n.pre === '利多' ? 'pred-bullish' : n.pre === '利空' ? 'pred-bearish' : 'pred-neutral';
+    return `
+    <div class="news-card ${cls}">
+      <div class="news-card-header">
+        <div class="news-card-title">${n.t}</div>
+        <span class="news-card-pred ${predCls}">${n.pre}</span>
+      </div>
+      <div class="news-card-meta">
+        <span class="source">${n.s}</span>
+        <span>${n.d}</span>
+      </div>
+      <div class="news-card-summary">${n.sum}</div>
+      <div class="news-card-sectors">
+        ${n.sec.map(s => `<span class="sector-tag">${s}</span>`).join('')}
+      </div>
+      <div class="news-card-indices">
+        <strong>影响指数：</strong>${n.idx.join(' · ')}
+      </div>
+      <div class="news-card-analysis">
+        <strong>逻辑分析：</strong>${n.det}
+      </div>
+    </div>
+    `;
+  }).join('');
+}
+
+// Region tab events
+document.getElementById('regionTabs').addEventListener('click', e => {
+  const tab = e.target.closest('.region-tab');
+  if (!tab) return;
+  document.querySelectorAll('.region-tab').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  renderNews(tab.dataset.region);
+});
+
+// ==================== STOCK SEARCH ====================
+const HOT_STOCKS_CN = [
+  {code:'600519',name:'贵州茅台',mkt:1},{code:'000858',name:'五粮液',mkt:0},
+  {code:'300750',name:'宁德时代',mkt:0},{code:'002594',name:'比亚迪',mkt:0},
+  {code:'601318',name:'中国平安',mkt:1},{code:'600036',name:'招商银行',mkt:1},
+  {code:'601012',name:'隆基绿能',mkt:1},{code:'600900',name:'长江电力',mkt:1},
+  {code:'688981',name:'中芯国际',mkt:1},{code:'000001',name:'平安银行',mkt:0},
+  {code:'601899',name:'紫金矿业',mkt:1},{code:'002475',name:'立讯精密',mkt:0}
+];
+const HOT_STOCKS_US = [
+  {code:'AAPL',name:'苹果',mkt:105},{code:'MSFT',name:'微软',mkt:105},
+  {code:'GOOGL',name:'谷歌',mkt:105},{code:'AMZN',name:'亚马逊',mkt:105},
+  {code:'NVDA',name:'英伟达',mkt:105},{code:'TSLA',name:'特斯拉',mkt:105},
+  {code:'META',name:'Meta',mkt:105},{code:'NFLX',name:'奈飞',mkt:105},
+  {code:'JPM',name:'摩根大通',mkt:106},{code:'BABA',name:'阿里巴巴',mkt:106},
+  {code:'XOM',name:'埃克森美孚',mkt:106},{code:'WMT',name:'沃尔玛',mkt:106}
+];
+
+let currentMarket = 'all';
+let searchTimer = null;
+let refreshTimer = null;
+let currentStock = null;
+
+// JSONP helper
+function jsonp(url, timeout) {
+  timeout = timeout || 10000;
+  return new Promise((resolve, reject) => {
+    const cbName = '_jsonp_cb_' + Date.now() + '_' + Math.floor(Math.random()*10000);
+    let script = null, tid = null;
+    window[cbName] = function(data) {
+      cleanup(); resolve(data);
+    };
+    function cleanup() {
+      if(tid) clearTimeout(tid);
+      if(script && script.parentNode) script.parentNode.removeChild(script);
+      try { delete window[cbName]; } catch(e){ window[cbName]=undefined; }
+    }
+    tid = setTimeout(()=>{ cleanup(); reject(new Error('请求超时')); }, timeout);
+    script = document.createElement('script');
+    script.src = url + (url.includes('?')?'&':'?') + 'cb=' + cbName;
+    script.onerror = ()=>{ cleanup(); reject(new Error('网络错误')); };
+    document.body.appendChild(script);
+  });
+}
+
+// Search stocks
+async function searchStocks(keyword) {
+  const results = document.getElementById('searchResults');
+  if (!keyword || keyword.trim().length < 1) { results.classList.remove('show'); return; }
+  keyword = keyword.trim();
+
+  results.innerHTML = '<div class="loading" style="padding:16px"><div class="spinner"></div></div>';
+  results.classList.add('show');
+
+  try {
+    const url = 'https://searchapi.eastmoney.com/api/suggest/get?input=' + encodeURIComponent(keyword) + '&type=14&token=D43BF722C8E33BDC906FB84D85E326E8&count=15';
+    const data = await jsonp(url);
+    let items = [];
+    if (data && data.Data) items = data.Data;
+    else if (data && data.QuotationCodeTable && data.QuotationCodeTable.Data) items = data.QuotationCodeTable.Data;
+    else if (data && data.data) items = data.data;
+
+    // Filter by market
+    if (currentMarket !== 'all') {
+      items = items.filter(it => {
+        const mkt = parseInt(it.MktNum || it.mktNum || 0);
+        if (currentMarket === 'cn') return mkt === 0 || mkt === 1;
+        if (currentMarket === 'us') return mkt === 105 || mkt === 106;
+        return true;
+      });
+    }
+
+    // Filter to stock types only
+    items = items.filter(it => {
+      const st = it.SecurityType || it.securityType || '';
+      const code = it.Code || it.code || '';
+      // Keep stocks (type 40 for A-shares, 80 for US), filters out bonds, funds
+      if (st && (st.includes('40') || st.includes('80') || st.includes('30') || st.includes('60'))) return true;
+      // Fallback: keep by market
+      const mkt = parseInt(it.MktNum || 0);
+      if (mkt === 0 || mkt === 1 || mkt === 105 || mkt === 106) return true;
+      return false;
+    });
+
+    if (items.length === 0) {
+      results.innerHTML = '<div style="padding:16px;text-align:center;color:#787b86;font-size:13px">未找到匹配的股票</div>';
+      return;
+    }
+
+    results.innerHTML = items.map(it => {
+      const code = it.Code || it.code || '';
+      const name = it.Name || it.name || '';
+      const mkt = parseInt(it.MktNum || it.mktNum || 0);
+      let mktLabel = '', mktClass = '';
+      if (mkt === 1) { mktLabel='SH'; mktClass='market-sh'; }
+      else if (mkt === 0) { mktLabel='SZ'; mktClass='market-sz'; }
+      else if (mkt === 105) { mktLabel='NASDAQ'; mktClass='market-us'; }
+      else if (mkt === 106) { mktLabel='NYSE'; mktClass='market-us'; }
+      else { mktLabel='MKT'+mkt; mktClass='market-us'; }
+      return `<div class="search-item" onclick="selectStock('${code}',${mkt},'${name}')">
+        <div class="search-item-code">${code} <span class="search-item-market ${mktClass}">${mktLabel}</span></div>
+        <div class="search-item-name">${name}</div>
+      </div>`;
+    }).join('');
+  } catch(err) {
+    results.innerHTML = '<div class="error-msg">搜索失败：' + err.message + '<br>请检查网络连接</div>';
+  }
+}
+
+// Select stock from search results
+function selectStock(code, mkt, name) {
+  document.getElementById('searchResults').classList.remove('show');
+  document.getElementById('stockSearch').value = name + ' (' + code + ')';
+  fetchStockQuote(code, mkt, name);
+}
+
+// Get East Money quote URL
+function getQuoteUrl(code, mkt) {
+  if (mkt === 1) return 'https://quote.eastmoney.com/sh' + code + '.html';
+  if (mkt === 0) return 'https://quote.eastmoney.com/sz' + code + '.html';
+  if (mkt === 105 || mkt === 106) return 'https://quote.eastmoney.com/us/' + code + '.html';
+  return 'https://quote.eastmoney.com/';
+}
+
+// Fetch stock quote
+async function fetchStockQuote(code, mkt, name) {
+  const detail = document.getElementById('stockDetail');
+  const content = document.getElementById('stockDetailContent');
+  detail.classList.add('show');
+  content.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:12px">正在获取 ' + name + ' 实时行情...</p></div>';
+
+  const secid = mkt + '.' + code;
+  currentStock = { code, mkt, name, secid };
+
+  // Auto-refresh
+  if (refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = setInterval(()=>{ if(currentStock) fetchStockQuoteRaw(currentStock.code, currentStock.mkt, currentStock.name); }, 10000);
+
+  await fetchStockQuoteRaw(code, mkt, name);
+}
+
+async function fetchStockQuoteRaw(code, mkt, name) {
+  const content = document.getElementById('stockDetailContent');
+  const secid = mkt + '.' + code;
+  const fields = 'f43,f44,f45,f46,f47,f48,f50,f51,f52,f55,f57,f58,f60,f84,f85,f100,f116,f117,f161,f162,f163,f167,f168,f169,f170,f171,f177';
+  const url = 'https://push2.eastmoney.com/api/qt/stock/get?secid=' + secid + '&fields=' + fields;
+
+  try {
+    const data = await jsonp(url);
+    if (!data || !data.data || data.rc !== 0) {
+      content.innerHTML = '<div class="error-msg">无法获取该股票行情数据<br>可能是非交易时间或代码有误</div>';
+      return;
+    }
+    const d = data.data;
+    const isUS = (mkt === 105 || mkt === 106);
+    // US stocks use /1000 precision, A-shares use /100
+    const divisor = isUS ? 1000 : 100;
+
+    const price = (d.f43 || 0) / divisor;
+    const prevClose = (d.f60 || 0) / divisor;
+    const high = (d.f44 || 0) / divisor;
+    const low = (d.f45 || 0) / divisor;
+    const open = (d.f46 || 0) / divisor;
+    const change = (d.f169 || 0) / divisor;
+    // Percent/ratio fields are returned *100 by eastmoney API, need /100
+    const changePct = (d.f170 || 0) / 100;
+    const volume = d.f47 || 0;
+    const turnover = d.f48 || 0;
+    const volumeRatio = (d.f50 || 0) / 100;
+    const limitUp = (d.f51 || 0) / divisor;
+    const limitDown = (d.f52 || 0) / divisor;
+    const speed = (d.f55 || 0) / 100;
+    const totalShares = d.f84 || 0;
+    const floatShares = d.f85 || 0;
+    const industry = d.f100 || '—';
+    const totalMcap = d.f116 || 0;
+    const floatMcap = d.f117 || 0;
+    const peStatic = (d.f161 || 0) / 100;
+    const peTtm = (d.f162 || 0) / 100;
+    const peDynamic = (d.f163 || 0) / 100;
+    const pb = (d.f167 || 0) / 100;
+    const turnoverRate = (d.f168 || 0) / 100;
+    const amplitude = (d.f171 || 0) / 100;
+    const bidRatio = (d.f177 || 0) / 100;
+
+    const isUp = change >= 0;
+    const priceColor = isUp ? 'up' : 'down';
+    const currency = isUS ? '$' : '¥';
+
+    const fmtVol = (v) => {
+      if (v >= 1e12) return (v/1e12).toFixed(2)+'万亿';
+      if (v >= 1e8) return (v/1e8).toFixed(2)+'亿';
+      if (v >= 1e4) return (v/1e4).toFixed(2)+'万';
+      return v.toString();
+    };
+    const fmtMcap = (v) => {
+      if (v >= 1e12) return (v/1e12).toFixed(2)+'万亿';
+      if (v >= 1e8) return (v/1e8).toFixed(2)+'亿';
+      if (v >= 1e4) return (v/1e4).toFixed(2)+'万';
+      return v.toString();
+    };
+
+    const inWatchlist = isWatchlisted(code, mkt);
+
+    content.innerHTML = `
+      <div class="stock-detail-header">
+        <div class="stock-name-block">
+          <div>
+            <div class="stock-name">${d.f58 || name}</div>
+            <div class="stock-code">${code} · ${isUS ? (mkt===105?'NASDAQ':'NYSE') : (mkt===1?'上交所':'深交所')} · ${industry}</div>
+          </div>
+        </div>
+        <div class="stock-price-block">
+          <div class="stock-price ${priceColor}">${currency}${price.toFixed(2)}</div>
+          <div class="stock-change ${priceColor}">
+            ${isUp?'+':''}${change.toFixed(2)} <span>(${isUp?'+':''}${changePct.toFixed(2)}%)</span>
+          </div>
+        </div>
+      </div>
+      <div class="stock-metrics">
+        <div class="metric"><div class="metric-label">开盘价</div><div class="metric-value">${currency}${open.toFixed(2)}</div></div>
+        <div class="metric"><div class="metric-label">最高价</div><div class="metric-value up">${currency}${high.toFixed(2)}</div></div>
+        <div class="metric"><div class="metric-label">最低价</div><div class="metric-value down">${currency}${low.toFixed(2)}</div></div>
+        <div class="metric"><div class="metric-label">昨收价</div><div class="metric-value">${currency}${prevClose.toFixed(2)}</div></div>
+        <div class="metric"><div class="metric-label">成交量</div><div class="metric-value">${fmtVol(volume)}</div></div>
+        <div class="metric"><div class="metric-label">成交额</div><div class="metric-value">${fmtVol(turnover)}</div></div>
+        <div class="metric"><div class="metric-label">换手率</div><div class="metric-value">${turnoverRate.toFixed(2)}%</div></div>
+        <div class="metric"><div class="metric-label">量比</div><div class="metric-value">${volumeRatio.toFixed(2)}</div></div>
+        <div class="metric"><div class="metric-label">市盈率(动)</div><div class="metric-value">${peDynamic?peDynamic.toFixed(2):'—'}</div></div>
+        <div class="metric"><div class="metric-label">市盈率(TTM)</div><div class="metric-value">${peTtm?peTtm.toFixed(2):'—'}</div></div>
+        <div class="metric"><div class="metric-label">市净率</div><div class="metric-value">${pb?pb.toFixed(2):'—'}</div></div>
+        <div class="metric"><div class="metric-label">振幅</div><div class="metric-value">${amplitude.toFixed(2)}%</div></div>
+        <div class="metric"><div class="metric-label">总市值</div><div class="metric-value">${fmtMcap(totalMcap)}</div></div>
+        <div class="metric"><div class="metric-label">流通市值</div><div class="metric-value">${fmtMcap(floatMcap)}</div></div>
+        ${!isUS ? `<div class="metric"><div class="metric-label">涨停价</div><div class="metric-value up">${currency}${limitUp.toFixed(2)}</div></div>
+        <div class="metric"><div class="metric-label">跌停价</div><div class="metric-value down">${currency}${limitDown.toFixed(2)}</div></div>` : ''}
+        <div class="metric"><div class="metric-label">涨速</div><div class="metric-value ${speed>=0?'up':'down'}">${speed>=0?'+':''}${speed.toFixed(2)}%</div></div>
+        <div class="metric"><div class="metric-label">委比</div><div class="metric-value ${bidRatio>=0?'up':'down'}">${bidRatio>=0?'+':''}${bidRatio.toFixed(2)}%</div></div>
+      </div>
+      <div class="stock-actions">
+        <button class="btn ${inWatchlist?'btn-outline':'btn-primary'}" onclick="toggleWatchlist('${code}',${mkt},'${name}')">
+          ${inWatchlist?'✓ 已加入自选':'+ 加入自选'}
+        </button>
+        <button class="btn btn-outline" onclick="window.open('${getQuoteUrl(code,mkt)}','_blank')">查看更多 ↗</button>
+      </div>
+      <div style="margin-top:12px;font-size:11px;color:#5a5d66;text-align:right">数据来源：东方财富 · 每10秒自动刷新</div>
+    `;
+  } catch(err) {
+    if (content.querySelector('.loading')) {
+      content.innerHTML = '<div class="error-msg">行情获取失败：' + err.message + '<br>请检查网络连接后重试</div>';
+    }
+  }
+}
+
+// ==================== WATCHLIST ====================
+function getWatchlist() {
+  try { return JSON.parse(localStorage.getItem('stock_watchlist') || '[]'); } catch(e) { return []; }
+}
+function saveWatchlist(list) {
+  localStorage.setItem('stock_watchlist', JSON.stringify(list));
+}
+function isWatchlisted(code, mkt) {
+  return getWatchlist().some(s => s.code===code && s.mkt===mkt);
+}
+function toggleWatchlist(code, mkt, name) {
+  let list = getWatchlist();
+  const idx = list.findIndex(s => s.code===code && s.mkt===mkt);
+  if (idx >= 0) list.splice(idx, 1);
+  else list.push({code, mkt, name});
+  saveWatchlist(list);
+  renderWatchlist();
+  // Update button
+  if (currentStock && currentStock.code===code) {
+    fetchStockQuoteRaw(code, mkt, name);
+  }
+}
+function removeFromWatchlist(code, mkt) {
+  let list = getWatchlist();
+  list = list.filter(s => !(s.code===code && s.mkt===mkt));
+  saveWatchlist(list);
+  renderWatchlist();
+}
+function renderWatchlist() {
+  const el = document.getElementById('watchlist');
+  const list = getWatchlist();
+  if (list.length === 0) {
+    el.innerHTML = '<div class="watchlist-empty">暂无自选股票，搜索并添加后会显示在这里</div>';
+    return;
+  }
+  el.innerHTML = list.map(s => {
+    const mktLabel = s.mkt===1?'SH':s.mkt===0?'SZ':s.mkt===105?'NASDAQ':s.mkt===106?'NYSE':'';
+    return `<div class="watchlist-chip" onclick="selectStock('${s.code}',${s.mkt},'${s.name}')">
+      <span>${s.name}</span>
+      <span style="color:#787b86;font-size:11px">${s.code}</span>
+      <span class="remove" onclick="event.stopPropagation();removeFromWatchlist('${s.code}',${s.mkt})">×</span>
+    </div>`;
+  }).join('');
+}
+
+// ==================== HOT STOCKS ====================
+function renderHotStocks() {
+  document.getElementById('hotStocksCN').innerHTML = HOT_STOCKS_CN.map(s =>
+    `<div class="hot-stock-chip" onclick="selectStock('${s.code}',${s.mkt},'${s.name}')">
+      <div class="code">${s.code}</div>
+      <div class="name">${s.name}</div>
+    </div>`
+  ).join('');
+  document.getElementById('hotStocksUS').innerHTML = HOT_STOCKS_US.map(s =>
+    `<div class="hot-stock-chip" onclick="selectStock('${s.code}',${s.mkt},'${s.name}')">
+      <div class="code">${s.code}</div>
+      <div class="name">${s.name}</div>
+    </div>`
+  ).join('');
+}
+
+// ==================== EVENTS ====================
+// Search input
+document.getElementById('stockSearch').addEventListener('input', e => {
+  clearTimeout(searchTimer);
+  const val = e.target.value;
+  if (val.trim().length < 1) {
+    document.getElementById('searchResults').classList.remove('show');
+    return;
+  }
+  searchTimer = setTimeout(() => searchStocks(val), 300);
+});
+
+// Click outside to close search results
+document.addEventListener('click', e => {
+  if (!e.target.closest('.search-input-wrap')) {
+    document.getElementById('searchResults').classList.remove('show');
+  }
+});
+
+// Market toggle
+document.getElementById('marketToggle').addEventListener('click', e => {
+  const btn = e.target.closest('.market-btn');
+  if (!btn) return;
+  document.querySelectorAll('.market-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentMarket = btn.dataset.market;
+  // Re-search if there's text
+  const val = document.getElementById('stockSearch').value;
+  if (val.trim()) searchStocks(val);
+});
+
+// Navigation tabs
+document.querySelectorAll('.nav-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const sec = tab.dataset.section;
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    const map = { news: 'newsSection', index: 'indexSection', stock: 'stockSection' };
+    document.getElementById(map[sec] || 'newsSection').classList.add('active');
+    if (sec === 'index' && !indexDataLoaded) loadAllIndices();
+  });
+});
+
+// Clock
+function updateClock() {
+  const now = new Date();
+  const pad = n => n.toString().padStart(2,'0');
+  document.getElementById('headerTime').textContent =
+    now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+' '+pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds());
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ==================== INDEX DATA ====================
+const INDEX_LIST = [
+  // 中国
+  { secid:'1.000001', name:'上证指数', region:'china', risk:'high',
+    analysis:'长鑫科技295亿巨量IPO短期分流资金，7月15日科创50暴跌4.25%拖累科技板块。但央行维持宽松基调引导融资成本下行、扩大消费十五五规划获批、AI大会最高规格出席释放政策利好，政策托底意图明确。A股深V反弹后缩量整理，短期在3950点附近震荡，政策催化下中线偏多。',
+    posFactors:['央行宽松基调','扩大消费规划','AI大会催化','上市公司密集回购'],
+    negFactors:['长鑫IPO分流资金','科创50大跌4.25%','地缘冲突风险外溢'] },
+  { secid:'0.399001', name:'深证成指', region:'china', risk:'high',
+    analysis:'创业板和深证成指跌幅大于上证，反映成长股获利了结压力。7月15日深证跌0.97%，两市缩量1321亿。AI大会和半导体国产替代仍是中线主线，但短期需消化获利盘。关注二季度GDP数据验证复苏力度。',
+    posFactors:['AI产业链政策催化','半导体国产替代','央行宽松'],
+    negFactors:['成长股获利了结','缩量回调','二季度GDP待验证'] },
+  { secid:'0.399006', name:'创业板指', region:'china', risk:'high',
+    analysis:'7月14日创业板大涨3.43%后次日跌1.21%，波动剧烈。新能源和科技股权重较大，受全球半导体周期和AI产业政策双重影响。AI大会政策催化下有望企稳，但全球科技股调整增加不确定性。',
+    posFactors:['AI大会政策利好','新能源产业链','超跌反弹动力'],
+    negFactors:['全球科技股调整','获利了结压力','波动率偏高'] },
+  { secid:'1.000688', name:'科创50', region:'china', risk:'high',
+    analysis:'7月15日暴跌4.25%，前期涨幅过大引发技术性回调。长鑫科技IPO和AI大会双重催化在即，国产存储芯片龙头上市将带动半导体产业链估值重估。短期波动大但中线机遇显著，调整可能提供上车机会。',
+    posFactors:['长鑫科技IPO催化','AI大会利好','半导体国产替代'],
+    negFactors:['单日暴跌4.25%','获利盘抛压','估值偏高'] },
+  { secid:'100.HSI', name:'恒生指数', region:'china', risk:'medium',
+    analysis:'南向通扩容至8000亿元利好港股流动性，离岸人民币市场扩容。但美伊冲突和美联储加息预期压制风险偏好。港股处于政策和地缘多空交织状态，南向资金流入提供支撑。',
+    posFactors:['南向通扩容至8000亿','离岸人民币利好','估值偏低'],
+    negFactors:['美联储加息预期','地缘冲突风险','外资流出压力'] },
+
+  // 美国
+  { secid:'100.DJIA', name:'道琼斯工业', region:'us', risk:'high',
+    analysis:'美联储新主席沃什国会首秀和6月CPI数据为本周焦点。通胀加速确认推升7月加息概率至45%。五大银行财报将验证经济健康。特朗普称9月可能政府停摆增加政治不确定性。道指受金融和工业股权重影响，加息预期直接冲击。',
+    posFactors:['衰退概率仅15.8%','五大行财报验证','收益率曲线正常化'],
+    negFactors:['7月加息概率45%','通胀加速确认','政府停摆风险'] },
+  { secid:'100.SPX', name:'标普500', region:'us', risk:'high',
+    analysis:'美联储半年度货币政策报告称通胀自2026年3月加速，沃勒警告可能需加息。市场三杀（美股美债黄金齐跌）反映滞胀担忧。CPI数据将决定7月议息走向，是标普500短期最大变量。',
+    posFactors:['企业盈利韧性','衰退概率低位'],
+    negFactors:['通胀加速确认','加息预期升温','三杀行情信号'] },
+  { secid:'100.NDX', name:'纳斯达克综合', region:'us', risk:'high',
+    analysis:'科技股权重高对利率高度敏感，首当其冲受加息预期压制。ASML二季报将指引半导体周期判断。韩国杠杆ETF危机可能传染全球科技股情绪。纳指短期承压，但AI产业趋势仍支撑长线。',
+    posFactors:['AI产业长期趋势','超跌反弹潜力'],
+    negFactors:['利率敏感度最高','韩国科技股危机传染','半导体周期见顶担忧'] },
+
+  // 亚洲
+  { secid:'100.N225', name:'日经225', region:'asia', risk:'high',
+    analysis:'日本5月薪资增速超3%、6月PPI超预期上行，日央行年内再加息预期升温。加息将推升日元压制出口企业盈利。丰田、索尼等出口巨头承压，但银行股受益于息差扩大。加息与贬值的拉锯决定方向。',
+    posFactors:['出口企业盈利强','银行股息差利好','超跌反弹'],
+    negFactors:['日央行加息预期升温','日元走强压制出口','全球科技股调整'] },
+  { secid:'100.KS11', name:'韩国KOSPI', region:'asia', risk:'high',
+    analysis:'三周内从牛市进入技术性熊市，7月13日暴跌8.95%触发全市场熔断。从6月22日高点回撤超25%。杠杆ETF危机引发3442亿韩元强制平仓，信用盘危机蔓延。虽然7月15日反弹6.24%，但去杠杆过程未结束。KOSPI市盈率降至6.25倍低于金融危机低点，极度超卖但系统性风险未解除。',
+    posFactors:['市盈率6.25倍极低','7月15日反弹6.24%','半导体周期支撑'],
+    negFactors:['三周回撤25%','杠杆ETF强制平仓','信用盘危机蔓延','央行可能加息'] },
+
+  // 欧洲
+  { secid:'100.GDAXI', name:'德国DAX30', region:'europe', risk:'medium',
+    analysis:'美伊冲突对欧洲能源供应构成潜在风险。德国经济高度依赖出口，全球增长放缓压制DAX。汽车巨头面临电动化转型成本高企与中国新能源车竞争双重压力。但国防军工板块受益于地缘冲突，莱茵金属等订单增长。DAX多空交织小幅震荡。',
+    posFactors:['国防军工订单增长','超跌估值吸引'],
+    negFactors:['能源供应风险','汽车业转型压力','全球需求疲软'] },
+  { secid:'100.FCHI', name:'法国CAC40', region:'europe', risk:'medium',
+    analysis:'奢侈品板块LVMH、开云受全球消费放缓和中国消费者需求不及预期压制。空客受益于航空复苏。法国政局不确定性和欧央行利率政策走向影响市场情绪。CAC40整体窄幅震荡。',
+    posFactors:['空客航空复苏','军工板块支撑'],
+    negFactors:['奢侈品消费疲软','欧央行政策不确定','政局不确定性'] },
+  { secid:'100.FTSE', name:'英国富时100', region:'europe', risk:'low',
+    analysis:'富时100中壳牌、BP等能源股权重较大，受益于油价站上80美元。金融股受加息预期支撑。英国股市防御性更强，在全球波动中表现相对稳健。能源和金融双轮驱动下偏强运行。',
+    posFactors:['能源股受益油价上涨','金融股息差利好','防御属性强'],
+    negFactors:['全球风险偏好下降'] },
+  { secid:'100.SX5E', name:'欧洲斯托克50', region:'europe', risk:'medium',
+    analysis:'欧洲整体小幅微涨，但缺乏强劲催化剂。欧央行面临通胀与增长两难：能源价格若推升通胀将被迫维持紧缩，经济放缓则需考虑降息。南欧国家经济复苏不均衡，银行资产质量差异导致内部分化。地缘风险溢价上升压制估值。',
+    posFactors:['通胀回落趋势','军工支出增加'],
+    negFactors:['欧央行政策两难','能源供应风险','南欧分化'] },
+
+  // 全球/大宗/加密
+  { secid:'100.UDI', name:'美元指数', region:'global', risk:'medium',
+    analysis:'美联储加息预期升温推升美元。美伊冲突避险需求也支撑美元走强。美元走强压制大宗商品和新兴市场。但纽约联储模型显示衰退概率仅15.8%，若经济数据走弱可能逆转。',
+    posFactors:['加息预期支撑','避险需求','美伊冲突'],
+    negFactors:['衰退概率上升','财政赤字扩大'] },
+  { secid:'133.USDCNH', name:'离岸人民币', region:'global', risk:'medium',
+    analysis:'美元走强压制人民币。但南向通扩容至8000亿元利好离岸人民币市场，央行引导融资成本下行。中国二季度GDP数据将影响汇率走向。人民币在7.25附近震荡，政策面有支撑。',
+    posFactors:['南向通扩容利好','央行宽松政策','经济复苏预期'],
+    negFactors:['美元走强压制','中美利差','地缘风险'] }
+];
+
+let indexDataCache = {};
+let indexDataLoaded = false;
+let currentIndexFilter = 'all';
+let indexRefreshInt = null;
+
+// Batch fetch all index quotes via ulist API (single request)
+function fetchAllIndexQuotes() {
+  return new Promise((resolve) => {
+    const allSecids = INDEX_LIST.map(i => i.secid).join(',');
+    const cbName = '_idx_batch_' + Math.random().toString(36).slice(2);
+    window[cbName] = function(data) {
+      delete window[cbName];
+      if (data && data.data && data.data.diff) resolve(data.data.diff);
+      else resolve([]);
+    };
+    const s = document.createElement('script');
+    s.src = 'https://push2.eastmoney.com/api/qt/ulist.np/get?fields=f1,f2,f3,f4,f5,f6,f12,f14,f15,f16,f17,f18&secids=' + allSecids + '&cb=' + cbName;
+    s.onerror = () => { delete window[cbName]; resolve([]); };
+    document.body.appendChild(s);
+    s.remove();
+    setTimeout(() => { if(window[cbName]){ delete window[cbName]; resolve([]); } }, 10000);
+  });
+}
+
+function parseIndexData(item) {
+  // f1=2 -> stock/index type, precision /100
+  // f1=4 -> forex type, precision /10000
+  const isForex = (item.f1 === 4);
+  const div = isForex ? 10000 : 100;
+  return {
+    name: item.f14,
+    price: (item.f2 || 0) / div,
+    change: (item.f4 || 0) / div,
+    changePct: (item.f3 || 0) / 100,
+    high: (item.f15 || 0) / div,
+    low: (item.f16 || 0) / div,
+    open: (item.f17 || 0) / div,
+    prevClose: (item.f18 || 0) / div,
+    amplitude: 0
+  };
+}
+
+async function loadAllIndices() {
+  indexDataLoaded = true;
+  const overview = document.getElementById('indexOverview');
+  overview.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:12px">正在加载全球指数实时行情...</p></div>';
+
+  const diff = await fetchAllIndexQuotes();
+  // Build a lookup by code (f12)
+  const lookup = {};
+  diff.forEach(item => { lookup[item.f12] = item; });
+
+  // Map back to INDEX_LIST using secid's code part
+  INDEX_LIST.forEach(idx => {
+    const codePart = idx.secid.split('.')[1];
+    const item = lookup[codePart];
+    if (item) {
+      const parsed = parseIndexData(item);
+      if (parsed.high && parsed.low && parsed.prevClose) {
+        parsed.amplitude = parsed.prevClose > 0 ? ((parsed.high - parsed.low) / parsed.prevClose * 100) : 0;
+      }
+      indexDataCache[idx.secid] = parsed;
+    }
+  });
+
+  renderIndexOverview();
+  renderIndexGroups();
+
+  // Auto refresh every 15s
+  if (indexRefreshInt) clearInterval(indexRefreshInt);
+  indexRefreshInt = setInterval(refreshIndices, 15000);
+}
+
+async function refreshIndices() {
+  const diff = await fetchAllIndexQuotes();
+  const lookup = {};
+  diff.forEach(item => { lookup[item.f12] = item; });
+
+  INDEX_LIST.forEach(idx => {
+    const codePart = idx.secid.split('.')[1];
+    const item = lookup[codePart];
+    if (item) {
+      const parsed = parseIndexData(item);
+      if (parsed.high && parsed.low && parsed.prevClose) {
+        parsed.amplitude = parsed.prevClose > 0 ? ((parsed.high - parsed.low) / parsed.prevClose * 100) : 0;
+      }
+      indexDataCache[idx.secid] = parsed;
+    }
+  });
+
+  renderIndexOverview();
+  renderIndexGroups();
+  // If detail open, refresh it
+  const detail = document.getElementById('indexDetail');
+  if (detail.classList.contains('show') && detail.dataset.secid) {
+    renderIndexDetail(detail.dataset.secid);
+  }
+}
+
+const REGION_LABELS = { china:'中国', us:'美国', asia:'亚洲', europe:'欧洲', global:'全球宏观' };
+
+function renderIndexOverview() {
+  const el = document.getElementById('indexOverview');
+  let list = INDEX_LIST;
+  if (currentIndexFilter !== 'all') list = list.filter(i => i.region === currentIndexFilter);
+
+  el.innerHTML = list.map(idx => {
+    const q = indexDataCache[idx.secid];
+    if (!q) return `<div class="index-card region-${idx.region}"><div class="idx-name">${idx.name}</div><div class="idx-price" style="color:#5a5d66">--</div></div>`;
+    const up = q.change >= 0;
+    const riskLabel = idx.risk === 'high' ? '高风险' : idx.risk === 'medium' ? '中风险' : '低风险';
+    const riskCls = idx.risk;
+    return `<div class="index-card region-${idx.region}" onclick="showIndexDetail('${idx.secid}')">
+      <div class="idx-name">${q.name || idx.name}</div>
+      <div class="idx-price">${q.price.toFixed(2)}</div>
+      <div class="idx-change ${up?'up':'down'}">${up?'+':''}${q.change.toFixed(2)} (${up?'+':''}${q.changePct.toFixed(2)}%)</div>
+      <div class="idx-meta">
+        <span>振幅 ${q.amplitude.toFixed(2)}%</span>
+        <span class="idx-risk ${riskCls}">${riskLabel}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderIndexGroups() {
+  const el = document.getElementById('indexGroups');
+  const regions = currentIndexFilter === 'all' ? ['china','us','asia','europe','global'] : [currentIndexFilter];
+  el.innerHTML = regions.map(reg => {
+    const indices = INDEX_LIST.filter(i => i.region === reg);
+    return `<div class="region-group">
+      <h3><span class="rg-dot ${reg}"></span>${REGION_LABELS[reg]}区域指数<span class="rg-count">(${indices.length}个)</span></h3>
+      <div class="index-overview" style="margin-bottom:0">
+        ${indices.map(idx => {
+          const q = indexDataCache[idx.secid];
+          if (!q) return '';
+          const up = q.change >= 0;
+          const riskLabel = idx.risk === 'high' ? '高风险' : idx.risk === 'medium' ? '中风险' : '低风险';
+          return `<div class="index-card region-${idx.region}" onclick="showIndexDetail('${idx.secid}')">
+            <div class="idx-name">${q.name || idx.name}</div>
+            <div class="idx-price">${q.price.toFixed(2)}</div>
+            <div class="idx-change ${up?'up':'down'}">${up?'+':''}${q.change.toFixed(2)} (${up?'+':''}${q.changePct.toFixed(2)}%)</div>
+            <div class="idx-meta"><span>振幅 ${q.amplitude.toFixed(2)}%</span><span class="idx-risk ${idx.risk}">${riskLabel}</span></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function showIndexDetail(secid) {
+  const detail = document.getElementById('indexDetail');
+  detail.classList.add('show');
+  detail.dataset.secid = secid;
+  renderIndexDetail(secid);
+  detail.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function renderIndexDetail(secid) {
+  const idx = INDEX_LIST.find(i => i.secid === secid);
+  if (!idx) return;
+  const q = indexDataCache[secid];
+  const content = document.getElementById('indexDetailContent');
+  if (!q) {
+    content.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+    return;
+  }
+  const up = q.change >= 0;
+  const riskLabel = idx.risk === 'high' ? '高风险' : idx.risk === 'medium' ? '中风险' : '低风险';
+  const riskCls = idx.risk;
+  const posChips = (idx.posFactors||[]).map(f => `<span class="factor-chip pos">${f}</span>`).join('');
+  const negChips = (idx.negFactors||[]).map(f => `<span class="factor-chip neg">${f}</span>`).join('');
+
+  content.innerHTML = `
+    <div class="index-detail-header">
+      <div>
+        <div class="index-detail-name">${q.name || idx.name}</div>
+        <div class="index-detail-code">${REGION_LABELS[idx.region]}区域 · ${idx.secid} · ${riskLabel}</div>
+      </div>
+      <div class="index-detail-price-block">
+        <div class="index-detail-price ${up?'up':'down'}">${q.price.toFixed(2)}</div>
+        <div class="index-detail-change ${up?'up':'down'}">${up?'+':''}${q.change.toFixed(2)} (${up?'+':''}${q.changePct.toFixed(2)}%)</div>
+      </div>
+    </div>
+    <div class="index-metrics-row">
+      <div class="metric"><div class="metric-label">今开</div><div class="metric-value">${q.open.toFixed(2)}</div></div>
+      <div class="metric"><div class="metric-label">最高</div><div class="metric-value up">${q.high.toFixed(2)}</div></div>
+      <div class="metric"><div class="metric-label">最低</div><div class="metric-value down">${q.low.toFixed(2)}</div></div>
+      <div class="metric"><div class="metric-label">昨收</div><div class="metric-value">${q.prevClose.toFixed(2)}</div></div>
+      <div class="metric"><div class="metric-label">振幅</div><div class="metric-value">${q.amplitude.toFixed(2)}%</div></div>
+    </div>
+    <div class="index-analysis-box">
+      <h4>新闻风险影响分析 <span class="risk-tag ${riskCls}">${riskLabel}</span></h4>
+      <p>${idx.analysis}</p>
+      <div class="factors">
+        ${posChips}
+        ${negChips}
+      </div>
+    </div>
+    <div style="margin-top:12px;font-size:11px;color:#5a5d66;text-align:right">数据来源：东方财富 · 每15秒自动刷新</div>
+  `;
+}
+
+// Index region filter
+document.getElementById('indexRegionTabs').addEventListener('click', e => {
+  const tab = e.target.closest('.region-tab');
+  if (!tab) return;
+  document.querySelectorAll('#indexRegionTabs .region-tab').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  currentIndexFilter = tab.dataset.iregion;
+  renderIndexOverview();
+  renderIndexGroups();
+});
+
+// ==================== INIT ====================
+renderNews('global');
+renderHotStocks();
+renderWatchlist();
+</script>
+</body>
+</html>
